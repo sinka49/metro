@@ -1,6 +1,6 @@
 BASE_URL = 'https://online.metro-cc.ru'
 # CATEGORY = '/category/gotovye-bljuda-polufabrikaty' здесь можно указать любую категорию
-CATEGORY = '/category/ovoshchi-i-frukty/frukty/f/brend/bez-brenda'
+CATEGORY = '/category/ovoshchi-i-frukty'
 URL_PARAMS = '?in_stock=1'
 PAGE = '&page='
 SRC_FOR_WRITE = './src/'
