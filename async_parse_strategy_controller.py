@@ -3,15 +3,15 @@ from typing import List
 import aiohttp
 from tqdm import tqdm
 
-from AsyncCsvWriter import AsyncCsvWriter
-from AsyncHtmlParser import AsyncHtmlParser
+from async_csv_writer import AsyncCsvWriter
+from async_html_parser import AsyncHtmlParser
 from constants import CATEGORY, HEADERS
 from utilits import get_url
 
 
 class AsyncParseStrategyController:
     """
-          Класс для объекта стратегии парсинга
+    Класс для объекта стратегии парсинга
     """
     csv_writer: AsyncCsvWriter
     category: str
@@ -25,6 +25,9 @@ class AsyncParseStrategyController:
     # Метод для получения хтмл по ссылке
     @staticmethod
     async def get_html_docs(urls: List[str]) -> list[str]:
+        """
+        Метод для получения html страниц по ссылкам
+        """
         async with aiohttp.ClientSession(trust_env=True) as session:
             tasks = []
             for url in urls:
@@ -32,11 +35,13 @@ class AsyncParseStrategyController:
             responses = await asyncio.gather(*tasks)
             return [await r.text(encoding='UTF-8') for r in responses]
 
-    # Так как категория может быть общей и не содержать фильтра по брендам, собираем список категорий,
-    # которые теоретически могут содержать фильтр бренда. Сейчас все категории второго уровня содержат бренд. Но это
-    # не точно) Не соответствует принципу ягни, но тут как будто бы лучше перебдеть.
-
     async def start_parsing(self) -> None:
+        """
+        Метод для описания стратегии начала парсинга.
+        Так как категория может быть общей и не содержать фильтра по брендам, собираем список категорий,
+        которые теоретически могут содержать фильтр бренда. Сейчас все категории второго уровня содержат бренд. Но это
+        не точно) Не соответствует принципу ягни, но тут как будто бы лучше перебдеть.
+        """
         print(f'\nПроверяем категорию {CATEGORY}.')
         url = get_url(CATEGORY)
         brand_position = url.find('/brend/')
@@ -63,6 +68,10 @@ class AsyncParseStrategyController:
                 await self.__parse_category_recursive(parser.categories, True)
 
     async def __parse_category_recursive(self, categories: List[str], pbar: bool = False) -> None:
+        """
+        Метод для рекурсивного прохода по категориям в поисках бренда
+        """
+
         html_docs = await self.get_html_docs(categories)
         __INFO_CATEGORIES_PBAR = f'Ищу товары по брендам по вложенным {len(html_docs)} категориям'
         html_docs_pbar = tqdm(html_docs, colour='GREEN', desc=__INFO_CATEGORIES_PBAR, ncols=120) if pbar else html_docs
@@ -76,10 +85,13 @@ class AsyncParseStrategyController:
                 await parser.find_and_set_categories()
                 await self.__parse_category_recursive(parser.categories)
 
-    # В случае нахождения категории, имеющей фильтр по брендам, собираем ссылки на фильтрацию по брендам (Чтобы не
-    # ходить по каждому товару в поисках бренда) и по списку брендов получаем товары с первой страницы
-    # бренда. Запускаем парсинг по страницам бренда.
     async def __parse_category_by_brands(self, brands: List[dict], pbar: bool = False) -> None:
+        """
+        Метод для получения товаров по брендам. Собираем ссылки на фильтрацию по брендам (Чтобы не
+        ходить по каждому товару в поисках бренда) и по списку брендов получаем товары с первой страницы
+        бренда. Запускаем парсинг по страницам бренда.
+        """
+
         page = 1
         urls = [get_url(brand['url'], page) for brand in brands]
         __INFO_BRANDS_PBAR = f'Ищу товары по {len(urls)} брендам в этой категории'
@@ -96,6 +108,9 @@ class AsyncParseStrategyController:
 
     # проверяем парсером пагинацию. Если вернет больше 1 - запустится цикл прохождения по страницам
     async def __parse_brands_by_pages(self, count_pages, brand: dict) -> None:
+        """
+        Метод для получения товаров по страницам пагинации.
+        """
         urls = [get_url(brand['url'], p) for p in range(2, count_pages + 1)]
         html_docs = await self.get_html_docs(urls)
         for html in html_docs:

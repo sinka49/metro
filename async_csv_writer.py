@@ -11,7 +11,7 @@ class AsyncCsvWriter:
         """
         Инициализация объекта AsyncCsvWriter
         """
-        self.src: str = SRC_FOR_WRITE + str(datetime.now()) + FILE_FOR_WRITE
+        self.src: str = f"{SRC_FOR_WRITE}{str(datetime.now())}{FILE_FOR_WRITE}"
 
     async def write_to_csv(self, data: List[dict]) -> None:
         """

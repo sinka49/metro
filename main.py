@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-from AsyncParseStrategyController import AsyncParseStrategyController
+from async_parse_strategy_controller import AsyncParseStrategyController
 
 
 async def main():
